@@ -9,15 +9,26 @@ capture = cv2.VideoCapture(0)
 while(True):
     # Lectura frame por frame
     ret, frame = capture.read()
+
+    # Rotacion
+    # rows, cols, canales1 = frame.shape
+    # temp = cv2.getRotationMatrix2D((cols/2, rows/2), 90, 1)
+    # frame = cv2.warpAffine(frame, temp, (cols, rows))
+    
     # Convierte el frame de BGR a GRIS
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Detección de rostro
     faces = face_cascade.detectMultiScale(frame_gray, 1.1, 5)
 
+    if (faces==()):
+        print ("TUPLA")
+    
     for (x, y, w, h) in faces:
         cv2.rectangle(frame_gray, (x, y), (x + w, y + h), (255, 255, 255), 2)
         cv2.circle(frame_gray, (int(x + w / 2), int(y + h / 2)), 2, (255, 255, 255), 2)
+        print ("X: ", x)
+        print ("Y: ", y)
 		
     # Muestra el video resultante con el rostro y sus características detectadas
     cv2.imshow("Web Cam", frame_gray)
