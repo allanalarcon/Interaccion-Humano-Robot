@@ -1,66 +1,108 @@
 import cv2
+import numpy as np
 
-def prom(list):
-    return sum(list) / len(list)
-
-# Classifier XML
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-# Captura la señal de video desde la camara
-capture = cv2.VideoCapture(0)
-# Se definen listas para las coordenadas [i, j]
+# Coordenadas de los centroides de cada rostro y el área
 i = []
 j = []
-# Se definen listas para las coordenadas [r, c]
+area = []
+areaTemp = []
+
+# Coordenadas del punto a seguir
 r = []
 c = []
 
-while(True):
-    # Lectura frame por frame
+# Classifier XML
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
+# Captura la señal desde un archivo de video
+capture = cv2.VideoCapture(0)
+
+while (True):
+    # Lectura del frame
     ret, frame = capture.read()
-    
+
     # Convierte el frame de BGR a GRIS
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
+
     # Detección de rostro
     faces = face_cascade.detectMultiScale(frame_gray, 1.1, 5)
-    
+
     # Se dibuja el rectangulo de visión
     font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(frame_gray,'Rango de vision',(25,470), font, 0.5,(0,255,0),1,cv2.LINE_AA)
-    cv2.rectangle(frame_gray,(25,25),(610,456),(0,255,0),2)
+    cv2.putText(frame_gray, 'Area de vision', (200, 230), font, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+    cv2.rectangle(frame_gray, (200, 120), (280, 220), (0, 255, 0), 2)
 
-    for (x, y, w, h) in faces:
+    for x, y, w, h in faces:
         # Se dibuja el rectangulo para cada rostro
         cv2.rectangle(frame_gray, (x, y), (x + w, y + h), (255, 255, 255), 2)
-        # Se dibuja el circulo central para cada rostro
-        cv2.circle(frame_gray, (int(x + w / 2), int(y + h / 2)), 2, (255, 255, 255), 2)
 
-        i.append(int(x + w / 2))
-        j.append(int(y + h / 2))
+        # Se calcula el centroide de cada rostro y el área
+        xc = int(x + w / 2)
+        yc = int(y + h / 2)
+        cv2.circle(frame_gray, (xc, yc), 2, (255, 255, 255), 2)
+        i.append(xc)
+        j.append(yc)
+        area.append(w * h)
 
-    if (len(i) != 0):
-        cv2.circle(frame_gray, (int(prom(i)), int(prom(j))), 2, (0, 255, 0), 2)
-        # Se guardan las coordenadas como historial
-        r.append(int(prom(i)))
-        c.append(int(prom(j)))
-        print ("---------------------------------")
-        print ("Coordenada en el eje X: ", prom(i))
-        print ("Coordenada en el eje Y: ", prom(j))
-    
-    # Se vacian las listas de coordenadas para cada frame        
+        # IF EN ETAPA DE PRUEBA
+        if len(r) > 1:
+            if (yc - r[len(r) - 1]) > 25:
+                i.pop()
+                j.pop()
+                area.pop()
+
+        areaTemp = area.copy()
+        areaTemp.sort(reverse=True)
+
+    # Se valida que existan coordenadas
+    if len(i) == len(j) and len(i) > 0:
+        # En caso de haber una coordenada, esa será el punto a seguir
+        if len(i) == 1:
+            c.append(i[0])
+            r.append(j[0])
+        else:
+            # Se usará la coordenada del rostro que esté más cerca (área más grande)
+            if (areaTemp[0] - areaTemp[1]) >= 2500:
+                c.append(i[area.index(areaTemp[0])])
+                r.append(j[area.index(areaTemp[0])])
+            # Se calculará la mediana de las coordenadas de los rostros
+            else:
+                iTemp = i.copy()
+                jTemp = j.copy()
+                i.sort()
+                j.sort()
+                if len(i) % 2 == 0:
+                    c.append(int((i[int(len(i) / 2 - 1)] + i[int(len(i) / 2)]) / 2))
+                    r.append(int((j[int(len(j) / 2 - 1)] + j[int(len(j) / 2)]) / 2))
+                else:
+                    c.append(int(i[int(len(i) / 2)]))
+                    r.append(jTemp[iTemp.index(c[len(c) - 1])])
+                jTemp.clear()
+                iTemp.clear()
+
+        # Se dibuja el punto de referencia
+        cv2.circle(frame_gray, (c[len(c) - 1], r[len(r) - 1]), 2, (0, 255, 0), 2)
+        print("---------------------------------")
+        print("Coordenada en el eje X: ", c[len(c) - 1])
+        print("Coordenada en el eje Y: ", r[len(r) - 1])
+
+    # Se vacian las listas
     i.clear()
     j.clear()
-	
-    # Enviar trama
-    # Enviar trama
+    area.clear()
+    areaTemp.clear()
 
-    # Muestra el video resultante con el rostro y sus características detectadas
+    # Muestra el vídeo
     cv2.imshow("Web Cam", frame_gray)
+
     # Retraso en milisegundos para leer el siguiente frame
-    key = cv2.waitKey(1)  
+    key = cv2.waitKey(1)
+
     # Termina presionando la tecla esc
-    if (key == 27):  
-        break
+    import time
+
+    if key == 27:
+        time.sleep(50)
 
 capture.release()
 cv2.destroyAllWindows()
