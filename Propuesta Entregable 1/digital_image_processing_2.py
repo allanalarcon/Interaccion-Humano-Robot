@@ -4,7 +4,7 @@ import cv2
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
 #captura señal de video
-capture = cv2.VideoCapture('video.wmv')
+capture = cv2.VideoCapture('video.mp4')
 
 #captura la camara
 camara = cv2.VideoCapture(0)
@@ -16,7 +16,7 @@ while(True):
     #Rotación de imagen
     rows, cols = frame.shape[:2]
     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), 90, 1)
-    frame = cv2.warpAffine(frame, M, (cols, rows))
+    dst = cv2.warpAffine(frame, M, (cols, rows))
 
     #Se convierte el frame a gris
     frameGris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -92,7 +92,7 @@ while(True):
     # Muestra el video resultante con el rostro y sus características detectadas
     cv2.imshow("CAMARA", frameGris2)
 
-    key = cv2.waitKey(1)  # Retraso en milisegundos para leer el siguiente frame
+    key = cv2.waitKey(25)  # Retraso en milisegundos para leer el siguiente frame
 
     if (key == 27):  # Termina presionando la tecla Esc
         break

@@ -17,12 +17,12 @@ cap = cv2.VideoCapture('video.wmv')
 while(True):
     #captura frame
     ret, frame = cap.read()
-    
+
     #Rotación de imagen
     rows, cols = frame.shape[:2]
     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), 90, 1)
     dst = cv2.warpAffine(frame, M, (cols, rows))
-    
+
     #Se convierte el frame a gris
     frameGris = cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY)
 
@@ -38,7 +38,7 @@ while(True):
 
         #Detección de ojos a partir de ROI extraido
         eyes = eye_cascade.detectMultiScale(roi_gray)
-        
+
         for (ex,ey,ew,eh) in eyes:  #ex,ey posición TL del box del ojo, ew es ancho, eh es alto
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)  #dibuja rectangulo del ojo detectado  - color Verde
 
