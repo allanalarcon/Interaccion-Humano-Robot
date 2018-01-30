@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 # Coordenadas de los centroides de cada rostro y el área
 i = []
 j = []

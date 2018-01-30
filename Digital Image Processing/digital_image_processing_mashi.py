@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import serial
+from struct import *
 
 # Coordenadas de los centroides de cada rostro y el área
 i = []
@@ -102,6 +104,18 @@ while (True):
         print("Coordenada en el eje X: ", c[len(c) - 1])
         print("Coordenada en el eje Y: ", r[len(r) - 1])
 
+    # Se envia la trama utilizando struct
+    # x_axis debe ser mapeada en un rango [0, 100]
+    x_axis = c[len(c) - 1]
+    # y_axis debe ser mapeada en un rango [0, 100]
+    y_axis = r[len(r) - 1]
+    ser = serial.Serial(22)
+    ser.open()
+    # 2 corresponde al ID de la cabeza del robot
+    # 50 define la posición inicial del robot
+    ser.write(struct.pack('>BBBB',2,y_axis,x_axis,50))
+    ser.close()
+    
     # Se vacian las listas
     i.clear()
     j.clear()
