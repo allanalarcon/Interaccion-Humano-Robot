@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import serial
 import struct
+# from struct import *
 
 # Coordenadas de los centroides de cada rostro y el área
 i = []
@@ -32,9 +33,11 @@ nuevoH = int((rows * cos) + (cols * sin))
 temp[0, 2] += (nuevoW / 2) - (cols / 2)
 temp[1, 2] += (nuevoH / 2) - (rows / 2)
 
-x = 0
+print(frame.shape)
+x=0
+
 while (True):
-    x = x + 1
+    x+=1
     # Lectura del frame
     ret, frame = capture.read()
 
@@ -51,6 +54,10 @@ while (True):
     font = cv2.FONT_HERSHEY_SIMPLEX
     cv2.putText(frame_gray, 'Area de vision', (200, 230), font, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
     cv2.rectangle(frame_gray, (200, 200), (280, 300), (0, 255, 0), 2)
+    uc = int(480 / 2) 
+    vc = int(500 / 2)
+    cv2.circle(frame_gray, (uc, vc), 2, (0, 255, 0), 2)
+    
 
     for x, y, w, h in faces:
         # Se dibuja el rectangulo para cada rostro
@@ -102,26 +109,49 @@ while (True):
 
         # Se dibuja el punto de referencia
         cv2.circle(frame_gray, (c[len(c) - 1], r[len(r) - 1]), 2, (0, 255, 0), 2)
+        #print("---------------------------------")
+        #print("Coordenada en el eje X: ", c[len(c) - 1])
+        #print("Coordenada en el eje Y: ", r[len(r) - 1])
 
     # Se envia la trama utilizando struct
-    if (x%2 == 0 and len(c) != 0):
+    if (x%4 == 0 and len(c) != 0):
+        # x_axis debe ser mapeada en un rango [0, 100]
+        # y_axis debe ser mapeada en un rango [0, 100]
         x_axis = c[len(c) - 1]
         y_axis = r[len(r) - 1]
-        # x_axis debe ser mapeada en un rango [0, 100]
-        x_axis = int(100-(x_axis*(100/480))) 
-        # y_axis debe ser mapeada en un rango [0, 100]
-        y_axis = int(100-(y_axis*(100/640)))
+        if not ((200 < x_axis < 280) and (200 < y_axis < 300)):
+            print("SALISTE debo buscarte")
+            #x_axis = int(100-(x_axis*(100/500)))
+            #y_axis = int(100-(y_axis*(100/500)))
 
-        print("---------------------------------")
-        print("Coordenada en el eje X: ", x_axis)
-        print("Coordenada en el eje Y: ", y_axis)
-        
-        ser = serial.Serial("COM3")
-        # 2 corresponde al ID de la cabeza del robot
-        # 50 define la posición inicial del robot
-        ser.write(struct.pack('>BBBB',2,y_axis,x_axis,50))
-        ser.close()    
-        
+            
+            x_axis = (x_axis - uc)*(-1)
+            y_axis = (y_axis - vc) *(-1)
+            print(x_axis, y_axis)
+
+            if (0 <= x_axis <= 100 and 0 <= y_axis <= 100):
+                ser = serial.Serial("COM3")
+                ser.write(struct.pack('>BBBB',2,y_axis,x_axis,50))
+                ser.close()
+            
+            #if (0 <= x_axis <= 100 and 0 <= y_axis <= 100):
+            #    print(x_axis, y_axis)
+            #    ser = serial.Serial("COM3")
+            #    ser.write(struct.pack('>BBBB',2,y_axis,x_axis,50))
+            #    ser.close()
+            #else:
+            #    print(x_axis, y_axis)
+            #    x_axis = int(100-(x_axis*(100/500)))
+            #    y_axis = int(100-(y_axis*(100/500)))
+            #    ser = serial.Serial("COM3")
+            #    ser.write(struct.pack('>BBBB',2,y_axis,x_axis,50))
+            #    ser.close()
+            # ser.open()
+            # 2 corresponde al ID de la cabeza del robot
+            # 50 define la posición inicial del robot
+                #ser.write(struct.pack('>BBBB',2,y_axis,x_axis,50))
+                #ser.close()
+    
     # Se vacian las listas
     i.clear()
     j.clear()
